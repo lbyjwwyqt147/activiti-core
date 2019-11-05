@@ -55,6 +55,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-json-converter</artifactId>
+        </dependency>
         <!-- 由于Activiti默认使用H2数据库，所以需添加H2数据库支持; 通常我们使用mysql数据库,导入mysql驱动 而不会采用默认内存的H2数据库 -->
        <!-- <dependency>
             <groupId>com.h2database</groupId>
