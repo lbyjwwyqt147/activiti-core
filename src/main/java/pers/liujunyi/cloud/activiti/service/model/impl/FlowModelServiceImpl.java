@@ -1,5 +1,6 @@
 package pers.liujunyi.cloud.activiti.service.model.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -14,18 +15,23 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelDto;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelQueryDto;
+import pers.liujunyi.cloud.activiti.domain.model.FlowModelVo;
 import pers.liujunyi.cloud.activiti.service.model.FlowModelService;
 import pers.liujunyi.cloud.activiti.util.ModelDataJsonConstants;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
 import pers.liujunyi.cloud.common.restful.ResultUtil;
+import pers.liujunyi.cloud.common.util.DozerBeanMapperUtil;
+import pers.liujunyi.cloud.common.util.UserContext;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /***
  * 文件名称: FlowModelServiceImpl.java
@@ -53,6 +59,7 @@ public class FlowModelServiceImpl implements FlowModelService {
 
     @Override
     public ResultInfo findPageGird(FlowModelQueryDto query) {
+        List<FlowModelVo> result = new CopyOnWriteArrayList<>();
         // 创建Model查询 并且指定查询条件、分页参数、排序字段和排序方式
         ModelQuery modelQuery = this.repositoryService.createModelQuery();
         if (StringUtils.isNotBlank(query.getFlowModelName())) {
@@ -65,9 +72,21 @@ public class FlowModelServiceImpl implements FlowModelService {
         if (StringUtils.isNotBlank(query.getFlowModelCategory())) {
             modelQuery.modelCategory(query.getFlowModelCategory());
         }
+        Long lesseeId = UserContext.currentLesseeId();
+        if (lesseeId != null) {
+            modelQuery.modelTenantId(lesseeId.toString());
+        }
         // 分页参数 类似与MySQL的分页功能，第一个参数是从第几条开始，第二个参数是一共几条
         List<Model> modelList  = modelQuery.orderByCreateTime().desc().listPage(query.getFirstResult(), query.getPageSize());
-        return ResultUtil.success(modelList);
+        if (!CollectionUtils.isEmpty(modelList)) {
+            modelList.stream().forEach(item -> {
+                FlowModelVo modelVo = DozerBeanMapperUtil.copyProperties(item, FlowModelVo.class);
+                JSONObject jsonObject = JSONObject.parseObject(item.getMetaInfo());
+                modelVo.setDescription(jsonObject.getString("description"));
+                result.add(modelVo);
+            });
+        }
+        return ResultUtil.success(result);
     }
 
     @Override
@@ -85,6 +104,10 @@ public class FlowModelServiceImpl implements FlowModelService {
             // 设置对象值
             modelData.setMetaInfo(modelObjectNode.toString());
             modelData.setName(record.getFlowModelName());
+            Long lesseeId = UserContext.currentLesseeId();
+            if (lesseeId != null) {
+                modelData.setTenantId(lesseeId.toString());
+            }
             modelData.setKey(StringUtils.defaultString(record.getFlowModelKey()));
             //模型分类 结合自己的业务逻辑
             modelData.setCategory(record.getFlowModelCategory());
