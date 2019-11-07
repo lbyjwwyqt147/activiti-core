@@ -59,7 +59,7 @@ public class FlowModelServiceImpl implements FlowModelService {
 
     @Override
     public ResultInfo findPageGird(FlowModelQueryDto query) {
-        List<FlowModelVo> result = new CopyOnWriteArrayList<>();
+        List<FlowModelVo> resultData = new CopyOnWriteArrayList<>();
         // 创建Model查询 并且指定查询条件、分页参数、排序字段和排序方式
         ModelQuery modelQuery = this.repositoryService.createModelQuery();
         if (StringUtils.isNotBlank(query.getFlowModelName())) {
@@ -83,10 +83,16 @@ public class FlowModelServiceImpl implements FlowModelService {
                 FlowModelVo modelVo = DozerBeanMapperUtil.copyProperties(item, FlowModelVo.class);
                 JSONObject jsonObject = JSONObject.parseObject(item.getMetaInfo());
                 modelVo.setDescription(jsonObject.getString("description"));
-                result.add(modelVo);
+                resultData.add(modelVo);
             });
         }
-        return ResultUtil.success(result);
+        ResultInfo resultInfo = ResultUtil.success(resultData);
+        long total = resultData.size();
+        if (total == query.getPageSize()) {
+            total = (long)modelQuery.list().size();
+        }
+        resultInfo.setTotal(total);
+        return resultInfo;
     }
 
     @Override
@@ -207,6 +213,28 @@ public class FlowModelServiceImpl implements FlowModelService {
             e.printStackTrace();
             result = ResultUtil.fail();
             result.setMessage("流程部署发布失败.");
+        }
+        return result;
+    }
+
+    @Override
+    public Model findByKey(String modelKey) {
+        Model model  = this.repositoryService.createModelQuery().modelKey(modelKey).singleResult();
+        return model;
+    }
+
+    @Override
+    public String verifyModelKey(String modelKey, String history) {
+        String result = "true";
+        boolean verify = true;
+        if (StringUtils.isNotBlank(history) && modelKey.equals(history)) {
+            verify = false;
+        }
+        if (verify) {
+            Model model = this.findByKey(modelKey);
+            if (model != null && StringUtils.isNotBlank(model.getId())) {
+                result = "false";
+            }
         }
         return result;
     }

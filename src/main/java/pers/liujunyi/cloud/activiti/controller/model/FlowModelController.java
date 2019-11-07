@@ -115,4 +115,22 @@ public class FlowModelController extends BaseController {
         return this.flowModelService.deployFlowModel(modelId);
     }
 
+    /**
+     * 验证 标识key 是否存在
+     * @param flowModelKey  最新值
+     * @param history  历史值
+     * @return
+     */
+    @ApiOperation(value = "验证 标识key 是否存在", notes = "适用于验证 标识key 是否存在 请求示例：127.0.0.1:18080/api/v1/table/flow/model/verify/key")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "version", value = "版本号", paramType = "query", required = true, dataType = "integer", defaultValue = "v1"),
+            @ApiImplicitParam(name = "flowModelKey", value = "标识KEY",  required = true, dataType = "String"),
+            @ApiImplicitParam(name = "history", value = "历史标识KEY",  required = false, dataType = "String")
+    })
+    @GetMapping(value = "table/flow/model/verify/key")
+    @ApiVersion(1)
+    public String  verifyModelKey(String flowModelKey,  String history) {
+        return this.flowModelService.verifyModelKey(flowModelKey, history);
+    }
+
 }

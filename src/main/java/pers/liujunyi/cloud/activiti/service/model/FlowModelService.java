@@ -1,5 +1,6 @@
 package pers.liujunyi.cloud.activiti.service.model;
 
+import org.activiti.engine.repository.Model;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelDto;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelQueryDto;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
@@ -56,4 +57,19 @@ public interface FlowModelService {
      * @return
      */
     ResultInfo deployFlowModel(String modelId);
+
+    /**
+     * 根据标识key 获取数据
+     * @param modelKey
+     * @return
+     */
+    Model findByKey(String modelKey);
+
+    /**
+     * 验证 标识key 是否存在
+     * @param modelKey  最新值
+     * @param history  历史值
+     * @return
+     */
+    String  verifyModelKey(String modelKey, String history);
 }
