@@ -8,6 +8,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import pers.liujunyi.cloud.activiti.entity.BaseActivitiEntity;
 
 import javax.persistence.Column;
@@ -55,12 +56,12 @@ public class FlowCategory extends BaseActivitiEntity {
     private String fullParent;
 
     /** 完整的机构名称 */
-    @Field(index = false)
+    @Field(index = false, type = FieldType.Keyword)
     @Column(name = "FULL_NAME_", length = 100, nullable = true)
     private String fullName;
 
     /** 描述说明 */
-    @Field(index = false)
+    @Field(index = false, type = FieldType.Keyword)
     @Column(name = "DESCRIPTION_", length = 100, nullable = true)
     private String description;
 
