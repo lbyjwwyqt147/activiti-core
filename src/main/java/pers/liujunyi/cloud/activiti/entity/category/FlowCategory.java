@@ -43,11 +43,11 @@ public class FlowCategory extends BaseActivitiEntity {
     private String categoryName;
 
     /** 序号 */
-    @Column(name = "SEQUENCE_NUMBER_",  nullable = true)
+    @Column(name = "SEQUENCE_NUMBER_", columnDefinition="int(11)", nullable = true)
     private Integer sequenceNumber;
 
     /** 父级主键id */
-    @Column(name = "PARENT_ID_", length = 20, nullable = true)
+    @Column(name = "PARENT_ID_", columnDefinition="bigint(20)", nullable = true)
     private Long parentId;
 
     /** 完整层级ID */
@@ -65,7 +65,7 @@ public class FlowCategory extends BaseActivitiEntity {
     private String description;
 
     /** 状态：0：正常  1：禁用 */
-    @Column(name = "CATEGORY_STATUS_", length = 4, nullable = false)
+    @Column(name = "CATEGORY_STATUS_", columnDefinition="tinyint(4)", nullable = false)
     private Byte categoryStatus;
 
 }

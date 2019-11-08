@@ -1,5 +1,6 @@
 package pers.liujunyi.cloud.activiti.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,17 +32,18 @@ public class BaseActivitiEntity implements Serializable {
     @GeneratedValue(
             strategy = GenerationType.IDENTITY
     )
-    @Column(name = "ID_", length = 20 , nullable = false)
+    @Column(name = "ID_", columnDefinition="bigint(20)", nullable = false)
     private Long id;
 
     /** 创建时间 */
-    @Column(name = "CREATE_TIME_",  nullable = false)
+    @Column(name = "CREATE_TIME_", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @CreatedDate
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private Date createTime;
 
     /** 创建人ID */
-    @Column(name = "CREATE_USER_ID_", length = 20, nullable = false)
+    @Column(name = "CREATE_USER_ID_", columnDefinition="bigint(20)", nullable = false)
     @CreatedBy
     private Long createUserId;
 
@@ -49,14 +51,15 @@ public class BaseActivitiEntity implements Serializable {
     @Column(name = "UPDATE_TIME_",  nullable = true)
     @Temporal(TemporalType.TIMESTAMP)
     @LastModifiedDate
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private Date updateTime;
 
     /** 最后更新人ID */
-    @Column(name = "UPDATE_USER_ID_", length = 20,  nullable = true)
+    @Column(name = "UPDATE_USER_ID_", columnDefinition="bigint(20)", nullable = true)
     @LastModifiedBy
     private Long updateUserId;
 
     /** 租户Id  */
-    @Column(name = "LESSEE_", length = 20, nullable = true)
+    @Column(name = "LESSEE_", columnDefinition="bigint(20)", nullable = true)
     private Long lessee;
 }

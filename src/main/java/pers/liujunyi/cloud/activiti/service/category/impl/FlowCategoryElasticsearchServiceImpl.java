@@ -1,10 +1,12 @@
 package pers.liujunyi.cloud.activiti.service.category.impl;
 
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -51,12 +53,11 @@ public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServi
     @Override
     public ResultInfo findPageGird(FlowCategoryQueryDto query) {
         // 排序方式 解决无数据时异常 No mapping found for [createTime] in order to sort on
-       // SortBuilder sort = SortBuilders.fieldSort("createTime").unmappedType("date").order(SortOrder.DESC);
-        Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
-        //分页参数
-        Pageable pageable = query.toPageable(sort);
+        SortBuilder sortBuilder = SortBuilders.fieldSort("createTime").unmappedType("date").order(SortOrder.DESC);
+        // 如果使用这种排序方式 如果表中数据为空时,会报异常 No mapping found for [createTime] in order to sort on
+        //Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
         // 查询数据
-        SearchQuery searchQuery = query.toSpecPageable(pageable);
+        SearchQuery searchQuery = query.toSpecSortPageable(sortBuilder);
         Page<FlowCategory> searchPageResults = this.flowCategoryElasticsearchRepository.search(searchQuery);
         List<FlowCategory> searchDataList = searchPageResults.getContent();
         Long totalElements =  searchPageResults.getTotalElements();
