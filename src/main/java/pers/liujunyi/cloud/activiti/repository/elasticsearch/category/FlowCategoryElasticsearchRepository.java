@@ -1,6 +1,6 @@
 package pers.liujunyi.cloud.activiti.repository.elasticsearch.category;
 
-import pers.liujunyi.cloud.activiti.entity.category.FlowCategory;
+import pers.liujunyi.cloud.activiti.entity.category.ActFlowCategory;
 import pers.liujunyi.cloud.common.repository.elasticsearch.BaseElasticsearchRepository;
 
 import java.util.List;
@@ -16,19 +16,19 @@ import java.util.List;
  * @version 1.0
  * @author ljy
  */
-public interface FlowCategoryElasticsearchRepository extends BaseElasticsearchRepository<FlowCategory, Long> {
+public interface FlowCategoryElasticsearchRepository extends BaseElasticsearchRepository<ActFlowCategory, Long> {
 
     /**
      * 根据状态 获取数据
      * @param categoryStatus  0:正常  1：禁用
      * @return
      */
-    List<FlowCategory> findByCategoryStatus(Byte categoryStatus);
+    List<ActFlowCategory> findByCategoryStatus(Byte categoryStatus);
 
     /**
      * 根据categoryName 获取数据
      * @param categoryName  名称
      * @return
      */
-    List<FlowCategory> findByCategoryName(String categoryName);
+    List<ActFlowCategory> findByCategoryName(String categoryName);
 }

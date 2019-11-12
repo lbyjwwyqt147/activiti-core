@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import pers.liujunyi.cloud.activiti.domain.category.FlowCategoryDto;
-import pers.liujunyi.cloud.activiti.entity.category.FlowCategory;
+import pers.liujunyi.cloud.activiti.entity.category.ActFlowCategory;
 import pers.liujunyi.cloud.activiti.repository.elasticsearch.category.FlowCategoryElasticsearchRepository;
 import pers.liujunyi.cloud.activiti.repository.jpa.category.FlowCategoryRepository;
 import pers.liujunyi.cloud.activiti.service.category.FlowCategoryService;
@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author ljy
  */
 @Service
-public class FlowCategoryServiceImpl extends BaseServiceImpl<FlowCategory, Long> implements FlowCategoryService {
+public class FlowCategoryServiceImpl extends BaseServiceImpl<ActFlowCategory, Long> implements FlowCategoryService {
 
     @Autowired
     private FlowCategoryRepository flowCategoryRepository;
@@ -41,7 +41,7 @@ public class FlowCategoryServiceImpl extends BaseServiceImpl<FlowCategory, Long>
     private FlowCategoryElasticsearchRepository flowCategoryElasticsearchRepository;
 
 
-    public FlowCategoryServiceImpl(BaseRepository<FlowCategory, Long> baseRepository) {
+    public FlowCategoryServiceImpl(BaseRepository<ActFlowCategory, Long> baseRepository) {
         super(baseRepository);
     }
 
@@ -56,8 +56,10 @@ public class FlowCategoryServiceImpl extends BaseServiceImpl<FlowCategory, Long>
         if (record.getCategoryStatus() == null) {
             record.setCategoryStatus(SecurityConstant.ENABLE_STATUS);
         }
-        FlowCategory flowCategory = DozerBeanMapperUtil.copyProperties(record, FlowCategory.class);
-        FlowCategory saveObj = this.flowCategoryRepository.save(flowCategory);
+        ActFlowCategory flowCategory = DozerBeanMapperUtil.copyProperties(record, ActFlowCategory.class);
+        ActFlowCategory category = new ActFlowCategory();
+        category.setCategoryName("test");
+        ActFlowCategory saveObj = this.flowCategoryRepository.save(category);
         if (saveObj != null && saveObj.getId() != null) {
             this.flowCategoryElasticsearchRepository.save(saveObj);
         }else {
@@ -97,7 +99,7 @@ public class FlowCategoryServiceImpl extends BaseServiceImpl<FlowCategory, Long>
     @Override
     public ResultInfo syncDataToElasticsearch() {
         Sort sort = Sort.by(Sort.Direction.ASC, "id");
-        List<FlowCategory> list = this.flowCategoryRepository.findAll(sort);
+        List<ActFlowCategory> list = this.flowCategoryRepository.findAll(sort);
         if (!CollectionUtils.isEmpty(list)) {
             this.flowCategoryElasticsearchRepository.deleteAll();
             // 限制条数
@@ -109,7 +111,7 @@ public class FlowCategoryServiceImpl extends BaseServiceImpl<FlowCategory, Long>
                 int part = size/pointsDataLimit;
                 for (int i = 0; i < part; i++) {
                     //1000条
-                    List<FlowCategory> partList = new LinkedList<>(list.subList(0, pointsDataLimit));
+                    List<ActFlowCategory> partList = new LinkedList<>(list.subList(0, pointsDataLimit));
                     //剔除
                     list.subList(0, pointsDataLimit).clear();
                     this.flowCategoryElasticsearchRepository.saveAll(partList);

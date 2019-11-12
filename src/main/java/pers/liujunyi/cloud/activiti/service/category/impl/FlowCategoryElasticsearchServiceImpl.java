@@ -11,7 +11,7 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import pers.liujunyi.cloud.activiti.domain.category.FlowCategoryQueryDto;
-import pers.liujunyi.cloud.activiti.entity.category.FlowCategory;
+import pers.liujunyi.cloud.activiti.entity.category.ActFlowCategory;
 import pers.liujunyi.cloud.activiti.repository.elasticsearch.category.FlowCategoryElasticsearchRepository;
 import pers.liujunyi.cloud.activiti.service.category.FlowCategoryElasticsearchService;
 import pers.liujunyi.cloud.common.repository.elasticsearch.BaseElasticsearchRepository;
@@ -39,13 +39,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author ljy
  */
 @Service
-public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServiceImpl<FlowCategory, Long> implements FlowCategoryElasticsearchService {
+public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServiceImpl<ActFlowCategory, Long> implements FlowCategoryElasticsearchService {
 
     @Autowired
     private FlowCategoryElasticsearchRepository flowCategoryElasticsearchRepository;
 
 
-    public FlowCategoryElasticsearchServiceImpl(BaseElasticsearchRepository<FlowCategory, Long> baseElasticsearchRepository) {
+    public FlowCategoryElasticsearchServiceImpl(BaseElasticsearchRepository<ActFlowCategory, Long> baseElasticsearchRepository) {
         super(baseElasticsearchRepository);
     }
 
@@ -58,8 +58,8 @@ public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServi
         //Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
         // 查询数据
         SearchQuery searchQuery = query.toSpecSortPageable(sortBuilder);
-        Page<FlowCategory> searchPageResults = this.flowCategoryElasticsearchRepository.search(searchQuery);
-        List<FlowCategory> searchDataList = searchPageResults.getContent();
+        Page<ActFlowCategory> searchPageResults = this.flowCategoryElasticsearchRepository.search(searchQuery);
+        List<ActFlowCategory> searchDataList = searchPageResults.getContent();
         Long totalElements =  searchPageResults.getTotalElements();
         ResultInfo result = ResultUtil.success(searchDataList);
         result.setTotal(totalElements);
@@ -69,8 +69,8 @@ public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServi
 
 
     @Override
-    public FlowCategory findById(Long id) {
-        Optional<FlowCategory> optional  = this.flowCategoryElasticsearchRepository.findById(id);
+    public ActFlowCategory findById(Long id) {
+        Optional<ActFlowCategory> optional  = this.flowCategoryElasticsearchRepository.findById(id);
         if (optional.isPresent()) {
             return optional.get();
         }
@@ -86,8 +86,8 @@ public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServi
         Pageable pageable = this.allPageable;
         // 查询数据
         SearchQuery searchQuery = query.toSpecPageable(pageable);
-        Page<FlowCategory> searchPageResults = this.flowCategoryElasticsearchRepository.search(searchQuery);
-        List<FlowCategory> FlowCategoryList = searchPageResults.getContent();
+        Page<ActFlowCategory> searchPageResults = this.flowCategoryElasticsearchRepository.search(searchQuery);
+        List<ActFlowCategory> FlowCategoryList = searchPageResults.getContent();
         if (!CollectionUtils.isEmpty(FlowCategoryList)) {
             FlowCategoryList.stream().forEach(item -> {
                 Map<String, String> map = new ConcurrentHashMap<>();
@@ -101,7 +101,7 @@ public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServi
 
     @Override
     public Map<Long, String> getCategoryNameMap(List<Long> ids) {
-        List<FlowCategory> FlowCategoryList = this.findAllByIdIn(ids);
+        List<ActFlowCategory> FlowCategoryList = this.findAllByIdIn(ids);
         if (!CollectionUtils.isEmpty(FlowCategoryList)) {
             Map<Long, String> nameMap = new ConcurrentHashMap<>();
             FlowCategoryList.stream().forEach(item -> {
@@ -120,7 +120,7 @@ public class FlowCategoryElasticsearchServiceImpl extends BaseElasticsearchServi
             verify = false;
         }
         if (verify) {
-            List<FlowCategory> categoryList = this.flowCategoryElasticsearchRepository.findByCategoryName(categoryName);
+            List<ActFlowCategory> categoryList = this.flowCategoryElasticsearchRepository.findByCategoryName(categoryName);
             if (!CollectionUtils.isEmpty(categoryList)) {
                 result = "false";
             }

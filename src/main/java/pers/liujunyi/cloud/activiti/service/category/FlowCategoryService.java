@@ -1,7 +1,7 @@
 package pers.liujunyi.cloud.activiti.service.category;
 
 import pers.liujunyi.cloud.activiti.domain.category.FlowCategoryDto;
-import pers.liujunyi.cloud.activiti.entity.category.FlowCategory;
+import pers.liujunyi.cloud.activiti.entity.category.ActFlowCategory;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
 import pers.liujunyi.cloud.common.service.BaseService;
 
@@ -18,7 +18,7 @@ import java.util.List;
  * @version 1.0
  * @author ljy
  */
-public interface FlowCategoryService extends BaseService<FlowCategory, Long> {
+public interface FlowCategoryService extends BaseService<ActFlowCategory, Long> {
 
     /**
      * 保存数据

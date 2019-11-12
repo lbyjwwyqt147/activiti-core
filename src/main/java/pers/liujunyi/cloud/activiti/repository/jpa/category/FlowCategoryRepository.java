@@ -2,8 +2,9 @@ package pers.liujunyi.cloud.activiti.repository.jpa.category;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import pers.liujunyi.cloud.activiti.entity.category.FlowCategory;
+import pers.liujunyi.cloud.activiti.entity.category.ActFlowCategory;
 import pers.liujunyi.cloud.common.repository.jpa.BaseRepository;
 
 import java.util.Date;
@@ -20,7 +21,8 @@ import java.util.List;
  * @version 1.0
  * @author ljy
  */
-public interface FlowCategoryRepository extends BaseRepository<FlowCategory, Long> {
+@Repository
+public interface FlowCategoryRepository extends BaseRepository<ActFlowCategory, Long> {
 
     /**
      * 修改状态

@@ -1,7 +1,7 @@
 package pers.liujunyi.cloud.activiti.service.category;
 
 import pers.liujunyi.cloud.activiti.domain.category.FlowCategoryQueryDto;
-import pers.liujunyi.cloud.activiti.entity.category.FlowCategory;
+import pers.liujunyi.cloud.activiti.entity.category.ActFlowCategory;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
 import pers.liujunyi.cloud.common.service.BaseElasticsearchService;
 
@@ -19,7 +19,7 @@ import java.util.Map;
  * @version 1.0
  * @author ljy
  */
-public interface FlowCategoryElasticsearchService extends BaseElasticsearchService<FlowCategory, Long> {
+public interface FlowCategoryElasticsearchService extends BaseElasticsearchService<ActFlowCategory, Long> {
 
 
 
@@ -36,7 +36,7 @@ public interface FlowCategoryElasticsearchService extends BaseElasticsearchServi
      * @param id
      * @return
      */
-    FlowCategory findById(Long id);
+    ActFlowCategory findById(Long id);
 
 
     /**
