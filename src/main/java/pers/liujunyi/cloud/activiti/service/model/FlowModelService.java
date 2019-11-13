@@ -6,6 +6,7 @@ import pers.liujunyi.cloud.activiti.domain.model.FlowModelQueryDto;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 /***
@@ -39,10 +40,11 @@ public interface FlowModelService {
 
     /**
      * 批量删除
-     * @param ids
+     * @param ids  模型ID
+     * @param deploymentIds  模型部署ID
      * @return
      */
-    ResultInfo deleteBatch(List<String> ids);
+    ResultInfo deleteBatch(List<String> ids, List<String> deploymentIds);
 
     /**
      * 导出model的xml文件
@@ -59,11 +61,25 @@ public interface FlowModelService {
     ResultInfo deployFlowModel(String modelId);
 
     /**
+     * 模型图信息
+     * @param modelId
+     * @return
+     */
+    ResultInfo diagram(String modelId) throws IOException;
+
+    /**
      * 根据标识key 获取数据
      * @param modelKey
      * @return
      */
     Model findByKey(String modelKey);
+
+    /**
+     * 根据ID 获取数据
+     * @param id
+     * @return
+     */
+    Model findById(String id);
 
     /**
      * 验证 标识key 是否存在

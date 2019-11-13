@@ -4,6 +4,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.activiti.engine.repository.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +16,11 @@ import pers.liujunyi.cloud.activiti.service.model.FlowModelService;
 import pers.liujunyi.cloud.common.annotation.ApiVersion;
 import pers.liujunyi.cloud.common.controller.BaseController;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
+import pers.liujunyi.cloud.common.restful.ResultUtil;
 import pers.liujunyi.cloud.common.util.SystemUtils;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /***
  * 文件名称: FlowModelController.java
@@ -69,18 +72,20 @@ public class FlowModelController extends BaseController {
 
     /**
      * 批量删除
-     * @param ids
+     * @param ids  模型ID
+     * @param deploymentIds  部署ID
      * @return
      */
     @ApiOperation(value = "删除多条数据", notes = "适用于批量删除数据 请求示例：127.0.0.1:18080/api/v1/verify/flow/model/d/b")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "version", value = "版本号", paramType = "query", required = true, dataType = "integer", defaultValue = "v1"),
-            @ApiImplicitParam(name = "ids", value = "ids",  required = true, dataType = "String")
+            @ApiImplicitParam(name = "ids", value = "ids",  required = true, dataType = "String"),
+            @ApiImplicitParam(name = "deploymentIds", value = "部署ID",  required = true, dataType = "String")
     })
     @DeleteMapping(value = "verify/flow/model/d/b")
     @ApiVersion(1)
-    public ResultInfo deleteBatch(String ids) {
-        return this.flowModelService.deleteBatch(SystemUtils.stringToList(ids));
+    public ResultInfo deleteBatch(String ids, String deploymentIds) {
+        return this.flowModelService.deleteBatch(SystemUtils.stringToList(ids), SystemUtils.stringToList(deploymentIds) );
     }
 
     /**
@@ -114,6 +119,48 @@ public class FlowModelController extends BaseController {
     public ResultInfo deployFlowModel(String modelId) {
         return this.flowModelService.deployFlowModel(modelId);
     }
+
+    /**
+     * 根据ID获取模型信息
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "根据ID获取模型信息", notes = "适用于根据ID获取模型信息 请求示例：127.0.0.1:18080/api/v1/verify/flow/model/details")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "version", value = "版本号", paramType = "query", required = true, dataType = "integer", defaultValue = "v1"),
+            @ApiImplicitParam(name = "id", value = "模型ID",  required = true, dataType = "String")
+    })
+    @GetMapping(value = "table/flow/model/details")
+    @ApiVersion(1)
+    public ResultInfo findById(String id) {
+        ResultInfo result = ResultUtil.success();
+        Model model =  this.flowModelService.findById(id);
+        if (model == null) {
+            result.setSuccess(false);
+            result.setMessage("流程模型数据不存在.");
+        } else {
+            result.setData(model);
+        }
+        return result;
+    }
+
+    /**
+     * 模型转为xml
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "模型转为xml", notes = "适用于模型转为xml 请求示例：127.0.0.1:18080/api/v1/verify/flow/model/diagram")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "version", value = "版本号", paramType = "query", required = true, dataType = "integer", defaultValue = "v1"),
+            @ApiImplicitParam(name = "id", value = "模型ID",  required = true, dataType = "String")
+    })
+    @GetMapping(value = "table/flow/model/diagram")
+    @ApiVersion(1)
+    public ResultInfo diagram(String id) throws IOException {
+        return this.flowModelService.diagram(id);
+    }
+
+
 
     /**
      * 验证 标识key 是否存在

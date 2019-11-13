@@ -39,9 +39,13 @@ public class FlowModelVo implements Serializable {
     @ApiModelProperty(value = "描述")
     private String description;
 
-    /** 分类  */
-    @ApiModelProperty(value = "分类")
+    /** 分类ID  */
+    @ApiModelProperty(value = "分类ID")
     private String category;
+
+    /** 分类名称  */
+    @ApiModelProperty(value = "分类名称")
+    private String categoryName;
 
     /** 创建时间  */
     @ApiModelProperty(value = "创建时间")
@@ -64,4 +68,11 @@ public class FlowModelVo implements Serializable {
     /** 租户 */
     @ApiModelProperty(value = "租户")
     private String tenantId;
+
+    /** 状态 0：已部署发布 1: 未部署 */
+    private Byte status;
+
+    /** ACT_GE_BYTEARRAY 表中的ID */
+    private String editorSourceValueId;
+
 }

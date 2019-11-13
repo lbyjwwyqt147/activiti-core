@@ -25,12 +25,17 @@ import pers.liujunyi.cloud.common.restful.ResultInfo;
 import pers.liujunyi.cloud.common.restful.ResultUtil;
 import pers.liujunyi.cloud.common.util.DozerBeanMapperUtil;
 import pers.liujunyi.cloud.common.util.UserContext;
+import pers.liujunyi.cloud.security.entity.category.CategoryInfo;
+import pers.liujunyi.cloud.security.service.category.CategoryInfoElasticsearchService;
+import pers.liujunyi.cloud.security.util.SecurityConstant;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /***
@@ -56,6 +61,8 @@ public class FlowModelServiceImpl implements FlowModelService {
 
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private CategoryInfoElasticsearchService categoryInfoElasticsearchService;
 
     @Override
     public ResultInfo findPageGird(FlowModelQueryDto query) {
@@ -78,11 +85,28 @@ public class FlowModelServiceImpl implements FlowModelService {
         }
         // 分页参数 类似与MySQL的分页功能，第一个参数是从第几条开始，第二个参数是一共几条
         List<Model> modelList  = modelQuery.orderByCreateTime().desc().listPage(query.getFirstResult(), query.getPageSize());
+        Map<String, String> categoryNameMap = new ConcurrentHashMap<>();
         if (!CollectionUtils.isEmpty(modelList)) {
             modelList.stream().forEach(item -> {
                 FlowModelVo modelVo = DozerBeanMapperUtil.copyProperties(item, FlowModelVo.class);
                 JSONObject jsonObject = JSONObject.parseObject(item.getMetaInfo());
                 modelVo.setDescription(jsonObject.getString("description"));
+                String categoryName = null;
+                if (categoryNameMap.containsKey(item.getCategory())) {
+                    categoryName = categoryNameMap.get(item.getCategory());
+                } else {
+                    CategoryInfo categoryInfo = this.categoryInfoElasticsearchService.findById(Long.valueOf(item.getCategory()));
+                    if (categoryInfo != null) {
+                        categoryName = categoryInfo.getCategoryName();
+                        categoryNameMap.put(item.getCategory(), categoryName);
+                    }
+                }
+                modelVo.setCategoryName(categoryName);
+                if (StringUtils.isBlank(item.getDeploymentId())) {
+                    modelVo.setStatus(SecurityConstant.DISABLE_STATUS);
+                } else {
+                    modelVo.setStatus(SecurityConstant.ENABLE_STATUS);
+                }
                 resultData.add(modelVo);
             });
         }
@@ -137,10 +161,19 @@ public class FlowModelServiceImpl implements FlowModelService {
     }
 
     @Override
-    public ResultInfo deleteBatch(List<String> ids) {
+    public ResultInfo deleteBatch(List<String> ids, List<String> deploymentIds) {
         for(String id : ids){
             this.repositoryService.deleteModel(id);
         }
+        if (!CollectionUtils.isEmpty(deploymentIds)) {
+            for(String deploymentId : deploymentIds){
+                if (StringUtils.isNotBlank(deploymentId)) {
+                    // 删除部署信息 1.true级联删除；2.false非级联删除
+                    this.repositoryService.deleteDeployment(deploymentId, true);
+                }
+            }
+        }
+
         return ResultUtil.success();
     }
 
@@ -218,8 +251,33 @@ public class FlowModelServiceImpl implements FlowModelService {
     }
 
     @Override
+    public ResultInfo diagram(String modelId) throws IOException {
+        /*BpmnModel bpmnModel = this.repositoryService.getBpmnModel(modelId);
+        BpmnXMLConverter bpmnXMLConverter = new BpmnXMLConverter();
+        byte[] convertToXML = bpmnXMLConverter.convertToXML(bpmnModel);
+        String bpmnBytes = new String(convertToXML);*/
+        // 获取模型数据
+        Model modelData = this.repositoryService.getModel(modelId);
+        BpmnJsonConverter jsonConverter = new BpmnJsonConverter();
+        //获取节点信息
+        byte[] arg0 = this.repositoryService.getModelEditorSource(modelData.getId());
+        JsonNode editorNode = new ObjectMapper().readTree(arg0);
+        //将节点信息转换为xml
+        BpmnModel bpmnModel = jsonConverter.convertToBpmnModel(editorNode);
+        BpmnXMLConverter xmlConverter = new BpmnXMLConverter();
+        byte[] bpmnBytes = xmlConverter.convertToXML(bpmnModel);
+        return ResultUtil.success(bpmnBytes);
+    }
+
+    @Override
     public Model findByKey(String modelKey) {
         Model model  = this.repositoryService.createModelQuery().modelKey(modelKey).singleResult();
+        return model;
+    }
+
+    @Override
+    public Model findById(String id) {
+        Model model  = this.repositoryService.createModelQuery().modelId(id).singleResult();
         return model;
     }
 
