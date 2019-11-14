@@ -72,7 +72,10 @@ public class FlowModelVo implements Serializable {
     /** 状态 0：已部署发布 1: 未部署 */
     private Byte status;
 
-    /** ACT_GE_BYTEARRAY 表中的ID */
+    /** 存放二进制流程模型XML数据 ACT_GE_BYTEARRAY 表中的ID name = source */
     private String editorSourceValueId;
+
+    /** 存放SVG 二进制xml 数据 ACT_GE_BYTEARRAY 表中的ID  name = source-extra */
+    private String editorSourceExtraValueId;
 
 }

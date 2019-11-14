@@ -4,7 +4,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.activiti.engine.repository.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelDto;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelQueryDto;
+import pers.liujunyi.cloud.activiti.domain.model.FlowModelVo;
 import pers.liujunyi.cloud.activiti.service.model.FlowModelService;
 import pers.liujunyi.cloud.common.annotation.ApiVersion;
 import pers.liujunyi.cloud.common.controller.BaseController;
@@ -134,7 +134,7 @@ public class FlowModelController extends BaseController {
     @ApiVersion(1)
     public ResultInfo findById(String id) {
         ResultInfo result = ResultUtil.success();
-        Model model =  this.flowModelService.findById(id);
+        FlowModelVo model =  this.flowModelService.findById(id);
         if (model == null) {
             result.setSuccess(false);
             result.setMessage("流程模型数据不存在.");
@@ -145,11 +145,11 @@ public class FlowModelController extends BaseController {
     }
 
     /**
-     * 模型转为xml
+     * 根据模型ID 回显流程模型图
      * @param id
      * @return
      */
-    @ApiOperation(value = "模型转为xml", notes = "适用于模型转为xml 请求示例：127.0.0.1:18080/api/v1/verify/flow/model/diagram")
+    @ApiOperation(value = "根据模型ID 回显流程模型图", notes = "适用于根据模型ID 回显流程模型图 请求示例：127.0.0.1:18080/api/v1/verify/flow/model/diagram")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "version", value = "版本号", paramType = "query", required = true, dataType = "integer", defaultValue = "v1"),
             @ApiImplicitParam(name = "id", value = "模型ID",  required = true, dataType = "String")
@@ -179,5 +179,25 @@ public class FlowModelController extends BaseController {
     public String  verifyModelKey(String flowModelKey,  String history) {
         return this.flowModelService.verifyModelKey(flowModelKey, history);
     }
+
+    /**
+     * 获取流程图片
+     * @param deploymentId  model的id 或者 部署id
+     * @param type  传入参数类型 deploy 或者  model
+     * @return 流程图片base64码
+     */
+    @ApiOperation(value = "获取流程图片", notes = "适用于获取流程图片 请求示例：127.0.0.1:18080/api/v1/verify/flow/model/details")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "version", value = "版本号", paramType = "query", required = true, dataType = "integer", defaultValue = "v1"),
+            @ApiImplicitParam(name = "deploymentId", value = "model的id 或者 部署id",  required = true, dataType = "String"),
+            @ApiImplicitParam(name = "type", value = "deploy 或者  model",  required = true, dataType = "String")
+    })
+    @GetMapping(value = "table/flow/model/image")
+    @ApiVersion(1)
+    public ResultInfo  flowImageBase64(String deploymentId, String type) {
+        ResultInfo result = ResultUtil.success(this.flowModelService.flowImageBase64(deploymentId, type));
+        return result;
+    }
+
 
 }

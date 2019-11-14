@@ -3,6 +3,7 @@ package pers.liujunyi.cloud.activiti.service.model;
 import org.activiti.engine.repository.Model;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelDto;
 import pers.liujunyi.cloud.activiti.domain.model.FlowModelQueryDto;
+import pers.liujunyi.cloud.activiti.domain.model.FlowModelVo;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
 
 import javax.servlet.http.HttpServletResponse;
@@ -61,7 +62,7 @@ public interface FlowModelService {
     ResultInfo deployFlowModel(String modelId);
 
     /**
-     * 模型图信息
+     * 根据模型ID 回显流程模型图
      * @param modelId
      * @return
      */
@@ -79,7 +80,7 @@ public interface FlowModelService {
      * @param id
      * @return
      */
-    Model findById(String id);
+    FlowModelVo findById(String id);
 
     /**
      * 验证 标识key 是否存在
@@ -88,4 +89,12 @@ public interface FlowModelService {
      * @return
      */
     String  verifyModelKey(String modelKey, String history);
+
+    /**
+     * 获取流程图片
+     * @param deploymentId  model的id 或者 部署id
+     * @param type  传入参数类型 deploy 或者  model
+     * @return 流程图片base64码
+     */
+    String flowImageBase64(String deploymentId, String type);
 }

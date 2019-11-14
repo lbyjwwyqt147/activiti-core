@@ -11,6 +11,10 @@ import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.Model;
 import org.activiti.engine.repository.ModelQuery;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,7 @@ import pers.liujunyi.cloud.activiti.service.model.FlowModelService;
 import pers.liujunyi.cloud.activiti.util.ModelDataJsonConstants;
 import pers.liujunyi.cloud.common.restful.ResultInfo;
 import pers.liujunyi.cloud.common.restful.ResultUtil;
+import pers.liujunyi.cloud.common.util.Base64Convert;
 import pers.liujunyi.cloud.common.util.DozerBeanMapperUtil;
 import pers.liujunyi.cloud.common.util.UserContext;
 import pers.liujunyi.cloud.security.entity.category.CategoryInfo;
@@ -30,9 +35,7 @@ import pers.liujunyi.cloud.security.service.category.CategoryInfoElasticsearchSe
 import pers.liujunyi.cloud.security.util.SecurityConstant;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,7 +127,12 @@ public class FlowModelServiceImpl implements FlowModelService {
         ResultInfo result = null;
         try {
             // 创建模型对象
-            Model modelData  = this.repositoryService.newModel();
+            Model modelData  = null;
+            if (StringUtils.isNotBlank(record.getId())) {
+                modelData = this.repositoryService.getModel(record.getId());
+            } else {
+                modelData  = this.repositoryService.newModel();
+            }
             ObjectNode modelObjectNode = this.objectMapper.createObjectNode();
             // 设置属性
             modelObjectNode.put(ModelDataJsonConstants.MODEL_NAME, record.getFlowModelName());
@@ -142,14 +150,21 @@ public class FlowModelServiceImpl implements FlowModelService {
             //模型分类 结合自己的业务逻辑
             modelData.setCategory(record.getFlowModelCategory());
             this.repositoryService.saveModel(modelData);
-            // ModelEditorSource
-            ObjectNode editorNode = this.objectMapper.createObjectNode();
-            editorNode.put("id", "canvas");
-            editorNode.put("resourceId", "canvas");
-            ObjectNode stencilSetNode = this.objectMapper.createObjectNode();
-            stencilSetNode.put("namespace", "http://b3mn.org/stencilset/bpmn2.0#");
-            editorNode.set("stencilset", stencilSetNode);
-            this.repositoryService.addModelEditorSource(modelData.getId(), editorNode.toString().getBytes("utf-8"));
+            // 将流程模型xml数据转为二进制数据 保存到 ACT_GE_BYTEARRAY 表中 name = source
+            this.repositoryService.addModelEditorSource(modelData.getId(), record.getJson_xml().getBytes("utf-8"));
+
+            // 将svg 转换为png
+            InputStream svgStream = new ByteArrayInputStream(record.getSvg_xml().getBytes("utf-8"));
+            TranscoderInput input = new TranscoderInput(svgStream);
+            PNGTranscoder transcoder = new PNGTranscoder();
+            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+            TranscoderOutput output = new TranscoderOutput(outStream);
+            transcoder.transcode(input, output);
+            final byte[] resultByte = outStream.toByteArray();
+            // 将png图片转为二进制数据 保存到 ACT_GE_BYTEARRAY 表中 name = source-extra
+            this.repositoryService.addModelEditorSourceExtra(modelData.getId(), resultByte);
+            outStream.close();
+
             result = ResultUtil.success();
             result.setMessage("流程模型创建成功.");
         } catch (Exception e) {
@@ -252,21 +267,14 @@ public class FlowModelServiceImpl implements FlowModelService {
 
     @Override
     public ResultInfo diagram(String modelId) throws IOException {
-        /*BpmnModel bpmnModel = this.repositoryService.getBpmnModel(modelId);
-        BpmnXMLConverter bpmnXMLConverter = new BpmnXMLConverter();
-        byte[] convertToXML = bpmnXMLConverter.convertToXML(bpmnModel);
-        String bpmnBytes = new String(convertToXML);*/
+        String jsonXml = null;
         // 获取模型数据
         Model modelData = this.repositoryService.getModel(modelId);
-        BpmnJsonConverter jsonConverter = new BpmnJsonConverter();
-        //获取节点信息
-        byte[] arg0 = this.repositoryService.getModelEditorSource(modelData.getId());
-        JsonNode editorNode = new ObjectMapper().readTree(arg0);
-        //将节点信息转换为xml
-        BpmnModel bpmnModel = jsonConverter.convertToBpmnModel(editorNode);
-        BpmnXMLConverter xmlConverter = new BpmnXMLConverter();
-        byte[] bpmnBytes = xmlConverter.convertToXML(bpmnModel);
-        return ResultUtil.success(bpmnBytes);
+        if (modelData != null) {
+            // 将信息转换为xml
+            jsonXml = new String(repositoryService.getModelEditorSource(modelData.getId()), "utf-8");
+        }
+        return ResultUtil.success(jsonXml);
     }
 
     @Override
@@ -276,8 +284,12 @@ public class FlowModelServiceImpl implements FlowModelService {
     }
 
     @Override
-    public Model findById(String id) {
-        Model model  = this.repositoryService.createModelQuery().modelId(id).singleResult();
+    public FlowModelVo findById(String id) {
+        FlowModelVo model = null;
+        List<Model> modelList  =  this.repositoryService.createModelQuery().modelId(id).list();
+        if (!CollectionUtils.isEmpty(modelList)) {
+            model = DozerBeanMapperUtil.copyProperties(modelList.get(0), FlowModelVo.class);
+        }
         return model;
     }
 
@@ -295,5 +307,33 @@ public class FlowModelServiceImpl implements FlowModelService {
             }
         }
         return result;
+    }
+
+    @Override
+    public String flowImageBase64(String deploymentId, String type) {
+        String image = "";
+        if ("deploy".equals(type)) {
+            try {
+                // 从仓库中找需要展示的文件
+                List<String> names = this.repositoryService.getDeploymentResourceNames(deploymentId);
+                String imageName = null;
+                for (String name : names) {
+                    if (name.indexOf(".png") >= 0) {
+                        imageName = name;
+                        break;
+                    }
+                }
+                // 通过部署ID和文件名称得到文件的输入流
+                InputStream in = this.repositoryService.getResourceAsStream(deploymentId, imageName);
+                image = Base64Convert.imageToBase64(in);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if ("model".equals(type)) {
+            //模型模块
+            byte[] bytes = this.repositoryService.getModelEditorSourceExtra(deploymentId);
+            image = Base64.encodeBase64String(bytes);
+        }
+        return "data:image/png;base64," + image;
     }
 }

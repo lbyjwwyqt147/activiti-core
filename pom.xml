@@ -19,6 +19,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <github.global.server>github</github.global.server>
+        <batik-transcoder.version>1.12</batik-transcoder.version>
         <activiti-dependencies.version>7.1.0.M4</activiti-dependencies.version>
         <security-core-version>0.0.1-SNAPSHOT</security-core-version>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -69,6 +70,18 @@
             <groupId>org.activiti</groupId>
             <artifactId>activiti-image-generator</artifactId>
         </dependency>-->
+        <!--svg 转为png 需要的jar 开始 -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-transcoder</artifactId>
+            <version>${batik-transcoder.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-codec</artifactId>
+            <version>${batik-transcoder.version}</version>
+        </dependency>
+        <!--svg 转为png 需要的jar 结束 -->
 
         <dependency>
             <groupId>pers.liujunyi.cloud</groupId>
