@@ -8,6 +8,7 @@ import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.editor.language.json.converter.BpmnJsonConverter;
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.impl.util.json.XML;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.Model;
 import org.activiti.engine.repository.ModelQuery;
@@ -133,6 +134,9 @@ public class FlowModelServiceImpl implements FlowModelService {
             } else {
                 modelData  = this.repositoryService.newModel();
             }
+            //将xml转为json
+            org.activiti.engine.impl.util.json.JSONObject jsonObject = XML.toJSONObject(record.getBpmn_xml());
+            String test = XML.toString(jsonObject);
             ObjectNode modelObjectNode = this.objectMapper.createObjectNode();
             // 设置属性
             modelObjectNode.put(ModelDataJsonConstants.MODEL_NAME, record.getFlowModelName());
@@ -150,8 +154,9 @@ public class FlowModelServiceImpl implements FlowModelService {
             //模型分类 结合自己的业务逻辑
             modelData.setCategory(record.getFlowModelCategory());
             this.repositoryService.saveModel(modelData);
+
             // 将流程模型xml数据转为二进制数据 保存到 ACT_GE_BYTEARRAY 表中 name = source
-            this.repositoryService.addModelEditorSource(modelData.getId(), record.getJson_xml().getBytes("utf-8"));
+            this.repositoryService.addModelEditorSource(modelData.getId(),  record.getJson_xml().getBytes("utf-8"));
 
             // 将svg 转换为png
             InputStream svgStream = new ByteArrayInputStream(record.getSvg_xml().getBytes("utf-8"));
@@ -238,7 +243,7 @@ public class FlowModelServiceImpl implements FlowModelService {
                 result.setMessage("模型数据为空,请先设计流程并成功保存,再进行发布.");
                 return result;
             }
-            ObjectNode modelNode = (ObjectNode) new ObjectMapper().readTree(bytes);
+            JsonNode modelNode = this.objectMapper.readTree(bytes);
             BpmnModel model = new BpmnJsonConverter().convertToBpmnModel(modelNode);
             if (model.getProcesses().size() == 0) {
                 result = ResultUtil.fail();
@@ -268,11 +273,12 @@ public class FlowModelServiceImpl implements FlowModelService {
     @Override
     public ResultInfo diagram(String modelId) throws IOException {
         String jsonXml = null;
-        // 获取模型数据
+        // 获取流程图模型数据
         Model modelData = this.repositoryService.getModel(modelId);
         if (modelData != null) {
-            // 将信息转换为xml
+            // 将流程图息转换为xml字符串
             jsonXml = new String(repositoryService.getModelEditorSource(modelData.getId()), "utf-8");
+           // jsonXml = JsonUtils.jsonToXml(jsonXml);
         }
         return ResultUtil.success(jsonXml);
     }

@@ -46,6 +46,9 @@ public class FlowModelDto implements Serializable {
     /** 流程模型bpmn xml 数据 */
     private String json_xml;
 
+    /** 流程模型bpmn xml 数据 */
+    private String bpmn_xml;
+
     /** svg xml 数据 */
     private String svg_xml;
 
